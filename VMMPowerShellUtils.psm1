@@ -5,10 +5,10 @@ function New-VMFromTemplate {
 		[String]$NewVMName,
     [Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true,HelpMessage="Template name")]
 		[String] $VMTemplateName,
-		[Parameter(Mandatory=$true,HelpMessage="The name of a variable to place the job info into, see New-SCVirtualMachine")]
-		[String]$JobVariable,
     [Parameter(Mandatory=$true,ParameterSetName="HostName",HelpMessage="VMHost to create VM on")]
-		[String]$VMHostName
+		[String]$VMHostName,
+		[Parameter(Mandatory=$false,HelpMessage="The name of a variable to place the job info into, see New-SCVirtualMachine")]
+		[String]$JobVariable
 	)
 	Begin {
         #Put begining stuff here
