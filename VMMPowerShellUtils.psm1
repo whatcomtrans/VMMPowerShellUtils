@@ -1,5 +1,5 @@
 function New-VMFromTemplate {
-	[CmdletBinding(SupportsShouldProcess=$false,DefaultParameterSetName="HostName")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="HostName")]
 	Param(
 		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true,HelpMessage="Name of the Virtual Machine to create.")]
 		[String]$NewVMName,
@@ -36,6 +36,12 @@ function New-VMFromTemplate {
         Update-SCVMConfiguration -VMConfiguration $virtualMachineConfiguration
 
         $vmConfig = New-SCVirtualMachine -Name $NewVMName -VMConfiguration $virtualMachineConfiguration -Description "" -BlockDynamicOptimization $false -StartVM -JobGroup $GUID -ReturnImmediately -StartAction "AlwaysAutoTurnOnVM" -StopAction "SaveVM" -JobVariable $JobVariable
+
+				#If returning the JobVariable, create new variable with same name but in the parent scope
+				if ($JobVariable -ne "theJob") {
+					New-Variable -Name $JobVariable -Value (Get-Variable -Name $JobVariable) -Scope 1
+				}
+
         return $vmConfig
 	}
 	End {
