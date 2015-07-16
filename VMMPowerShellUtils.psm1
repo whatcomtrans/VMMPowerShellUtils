@@ -3,9 +3,9 @@ function New-VMFromTemplate {
 	Param(
 		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true,HelpMessage="Name of the Virtual Machine to create.")]
 		[String]$NewVMName,
-    [Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true,HelpMessage="Template name")]
+    		[Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true,HelpMessage="Template name")]
 		[String] $VMTemplateName,
-    [Parameter(Mandatory=$true,ParameterSetName="HostName",HelpMessage="VMHost to create VM on")]
+    		[Parameter(Mandatory=$true,ParameterSetName="HostName",HelpMessage="VMHost to create VM on")]
 		[String]$VMHostName,
 		[Parameter(Mandatory=$false,HelpMessage="The name of a variable to place the job info into, see New-SCVirtualMachine")]
 		[String]$JobVariable
@@ -36,7 +36,7 @@ function New-VMFromTemplate {
         Update-SCVMConfiguration -VMConfiguration $virtualMachineConfiguration
 
         $vmConfig = New-SCVirtualMachine -Name $NewVMName -VMConfiguration $virtualMachineConfiguration -Description "" -BlockDynamicOptimization $false -StartVM -JobGroup $GUID -ReturnImmediately -StartAction "AlwaysAutoTurnOnVM" -StopAction "SaveVM" -JobVariable $JobVariable
-
+	Set-SCVirtualMachine -VM $vmConfig -EnableTimeSync $false
 				#If returning the JobVariable, create new variable with same name but in the parent scope
 				if ($JobVariable -ne "theJob") {
 					New-Variable -Name $JobVariable -Value (Get-Variable -Name $JobVariable) -Scope 1
