@@ -2,11 +2,21 @@ function New-VMFromTemplate {
 	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="HostName")]
 	Param(
 		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true,HelpMessage="Name of the Virtual Machine to create.")]
+<<<<<<< HEAD
 		    [String]$NewVMName,
     	[Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true,HelpMessage="Template name")]
 		    [String] $VMTemplateName,
     	[Parameter(Mandatory=$true,ParameterSetName="HostName",HelpMessage="VMHost to create VM on")]
 		    [String]$VMHostName
+=======
+		[String]$NewVMName,
+    		[Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true,HelpMessage="Template name")]
+		[String] $VMTemplateName,
+    		[Parameter(Mandatory=$true,ParameterSetName="HostName",HelpMessage="VMHost to create VM on")]
+		[String]$VMHostName,
+		[Parameter(Mandatory=$false,HelpMessage="The name of a variable to place the job info into, see New-SCVirtualMachine")]
+		[String]$JobVariable
+>>>>>>> 7fcee4e85612a903f7687e7ef72fd0698df16bd1
 	)
 	Begin {
         #Put begining stuff here
@@ -36,6 +46,7 @@ function New-VMFromTemplate {
         
         Update-SCVMConfiguration -VMConfiguration $virtualMachineConfiguration
 
+<<<<<<< HEAD
         New-SCVirtualMachine -Name $NewVMName -VMConfiguration $virtualMachineConfiguration -Description "" -BlockDynamicOptimization $false -StartVM -JobGroup $GUID -ReturnImmediately -StartAction "AlwaysAutoTurnOnVM" -StopAction "SaveVM" -JobVariable $JobVariable
     
     	#Set-SCVirtualMachine -VM $NewVMName -EnableTimeSync $false
@@ -43,6 +54,14 @@ function New-VMFromTemplate {
         $result = New-Object -TypeName PSObject
         Add-Member -InputObject $result -MemberType NoteProperty -Name Config -Value $virtualMachineConfiguration
         Add-Member -InputObject $result -MemberType NoteProperty -Name Job -Value (Get-Variable -Name $JobVariable).Value
+=======
+        $vmConfig = New-SCVirtualMachine -Name $NewVMName -VMConfiguration $virtualMachineConfiguration -Description "" -BlockDynamicOptimization $false -StartVM -JobGroup $GUID -ReturnImmediately -StartAction "AlwaysAutoTurnOnVM" -StopAction "SaveVM" -JobVariable $JobVariable
+	Set-SCVirtualMachine -VM $vmConfig -EnableTimeSync $false
+				#If returning the JobVariable, create new variable with same name but in the parent scope
+				if ($JobVariable -ne "theJob") {
+					New-Variable -Name $JobVariable -Value (Get-Variable -Name $JobVariable) -Scope 1
+				}
+>>>>>>> 7fcee4e85612a903f7687e7ef72fd0698df16bd1
 
         return $result
 	}
