@@ -6,13 +6,18 @@ function New-VMFromTemplate {
     	[Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true,HelpMessage="Template name")]
 		    [String] $VMTemplateName,
     	[Parameter(Mandatory=$true,ParameterSetName="HostName",HelpMessage="VMHost to create VM on")]
-		    [String]$VMHostName
+		    [String]$VMHostName,
+        [Parameter(Mandatory=$false,HelpMessage="Return immediately (default) or wait for creation to finish.")]
+            [Switch]$wait
 	)
 	Begin {
         #Put begining stuff here
 	}
 	Process {
         [GUID] $GUID = [guid]::NewGuid().Guid
+
+        [Boolean] $returnImmediately = $true
+        if ($wait) {$returnImmediately = $false}
 
         if (!$VMTemplateName) {
             $VMTemplateName = (Get-Template | select Name | Out-GridView)
@@ -36,7 +41,7 @@ function New-VMFromTemplate {
         
         Update-SCVMConfiguration -VMConfiguration $virtualMachineConfiguration
 
-        New-SCVirtualMachine -Name $NewVMName -VMConfiguration $virtualMachineConfiguration -Description "" -BlockDynamicOptimization $false -StartVM -JobGroup $GUID -ReturnImmediately -StartAction "AlwaysAutoTurnOnVM" -StopAction "SaveVM" -JobVariable $JobVariable
+        New-SCVirtualMachine -Name $NewVMName -VMConfiguration $virtualMachineConfiguration -Description "" -BlockDynamicOptimization $false -StartVM -JobGroup $GUID -ReturnImmediately:$returnImmediately -StartAction "AlwaysAutoTurnOnVM" -StopAction "SaveVM" -JobVariable $JobVariable
     
     	#Set-SCVirtualMachine -VM $NewVMName -EnableTimeSync $false
 	
