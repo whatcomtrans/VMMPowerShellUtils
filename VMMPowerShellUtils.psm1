@@ -88,38 +88,43 @@ function Add-VMHardDisk {
 	}
 }
 
-<#
-.SYNOPSIS
-Rebuild VMTemplates based on Hardware Profiles and Guest OS Profiles in a consistent fasion.  This is used when "stand alone" profiles
-are updated.
-
-#>
-function Rebuild-VMTemplates {
-	[CmdletBinding(SupportsShouldProcess=$true)]
+function New-wtaVMMVMTemplate {
+	[CmdletBinding(SupportsShouldProcess=$false)]
 	Param(
-		[Parameter(Mandatory=$true,HelpMessage="Provide the name of a VHD stored in the library")]
-		[Microsoft.SystemCenter.VirtualMachineManager.StandaloneVirtualHardDisk]$VHDObject
+		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true,HelpMessage="Hardware profile to use")]
+		 [String] $HardwareProfileName = "wtaP1R1domain",
+        [Parameter(Mandatory=$false,HelpMessage="Disk image name to use, defaults to WTAWIN2012R2STD.vhdx")]
+		 [String] $DiskName = "WTAWIN2012R2STD.vhdx",
+        [Parameter(Mandatory=$false,HelpMessage="Guest OS profile to use, defaults to WIN2012R2-DOMAIN-DEFAULT")]
+		 [String] $GuestOSProfileName = "WIN2012R2-DOMAIN-DEFAULT"
 	)
-	Begin {
-        $JobGUID = [System.Guid]::NewGuid()
-	}
 	Process {
-        forEach ($HWProfile in (Get-SCHardwareProfile)) {
-            forEach ($OSProfile in (Get-SCGuestOSProfile)) {
-                $TemplateName = $OSProfile.Name + "_" + $HWProfile.Name
-                Echo $TemplateName
-                if (Get-SCVMTemplate -Name $TemplateName) {
-                    #Delete first
-                    Get-SCVMTemplate -Name $TemplateName | Remove-SCVMTemplate -Force -RunAsynchronously
-                }
-                New-SCVMTemplate -VirtualHardDisk $VHDObject -Generation 1 -Name $TemplateName -HardwareProfile $HWProfile -GuestOSProfile $OSProfile -JobGroup $jobGUID
-            }
-        }
-	}
-	End {
-        #Put end here
-	}
-}
+        #Put process here
+        [Guid] $JobGroupGUID = ([guid]::NewGuid()).Guid
 
+        [String] $GuestOSProfileName = "WIN2012R2-DOMAIN-DEFAULT"
+        if ($DiskName -eq "WTAWIN2012R2STD.vhdx") {
+            [String] $Name = $GuestOSProfileName + "_" + $HardwareProfileName
+        } else {
+            [String] $Name = $GuestOSProfileName + "_" + $HardwareProfileName + "_" + $DiskName
+        }
+        [String] $Description = $Name
+
+        $HardwareProfile = Get-SCHardwareProfile | where {$_.Name -eq $HardwareProfileName}
+        $GuestOSProfile = Get-SCGuestOSProfile | where {$_.Name -eq $GuestOSProfileName}
+
+        $OperatingSystem = Get-SCOperatingSystem | where {$_.Name -eq "Windows Server 2012 R2 Standard"}
+
+        $VirtualHardDisk = Get-SCVirtualHardDisk | where HostType -EQ "LibraryServer" | where Name -like $DiskName
+        if ($HardwareProfile.Generation -eq 1) {   #IDE
+            New-SCVirtualDiskDrive -IDE -Bus 0 -LUN 0 -JobGroup $JobGroupGUID -CreateDiffDisk $false -VirtualHardDisk $VirtualHardDisk -VolumeType BootAndSystem
+        } else {  #SCSI
+            New-SCVirtualDiskDrive -SCSI -Bus 0 -LUN 1 -JobGroup $JobGroupGUID -CreateDiffDisk $false -VirtualHardDisk $VirtualHardDisk -VolumeType BootAndSystem
+        }
+
+        $template = New-SCVMTemplate -Name $Name -RunAsynchronously -Description $Description -Generation ($HardwareProfile.Generation) -HardwareProfile $HardwareProfile -GuestOSProfile $GuestOSProfile -JobGroup $JobGroupGUID -ComputerName "*" -TimeZone 4  -FullName "" -OrganizationName "" -AnswerFile $null -OperatingSystem $OperatingSystem 
+        return $template
+    }
+}
 
 Export-ModuleMember -Function "New-VMFromTemplate", "Rebuild-VMTemplates"
