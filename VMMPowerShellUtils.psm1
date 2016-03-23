@@ -102,7 +102,6 @@ function New-wtaVMMVMTemplate {
         #Put process here
         [Guid] $JobGroupGUID = ([guid]::NewGuid()).Guid
 
-        [String] $GuestOSProfileName = "WIN2012R2-DOMAIN-DEFAULT"
         if ($DiskName -eq "WTAWIN2012R2STD.vhdx") {
             [String] $Name = $GuestOSProfileName + "_" + $HardwareProfileName
         } else {
@@ -127,4 +126,4 @@ function New-wtaVMMVMTemplate {
     }
 }
 
-Export-ModuleMember -Function "New-VMFromTemplate", "Rebuild-VMTemplates"
+Export-ModuleMember -Function "*"
