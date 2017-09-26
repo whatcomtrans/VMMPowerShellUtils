@@ -126,4 +126,67 @@ function New-wtaVMMVMTemplate {
     }
 }
 
+function Remove-SCStaticIPAddressFromPoolReservedSet {
+	[CmdletBinding(SupportsShouldProcess=$true)]
+	Param(
+		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$true)]
+            [String]$PoolName,
+        [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$true)]
+		    [String]$IPAddress
+	)
+	Begin {
+        #Put begining stuff here
+	}
+	Process {
+        #Put process here
+        if (Get-SCStaticIPAddressPool -Name $PoolName) {
+            $Pool = Get-SCStaticIPAddressPool -Name $PoolName
+            $ReservedSet = ($Pool).IPAddressReservedSet
+
+            #Find the IPAddress and remove it along with extra characters
+            $ReservedSet = $ReservedSet.Replace("$IPAddress, ", "")
+            $ReservedSet = $ReservedSet.Replace(", $IPAddress", "")
+
+            #Update pool
+            $Pool | Set-SCStaticIPAddressPool -IPAddressReservedSet $ReservedSet
+        } else {
+            Write-Error -Message "$PoolName is not a valid Pool"
+        }
+	}
+	End {
+        #Put end here
+	}
+}
+
+function Add-SCStaticIPAddressFromPoolReservedSet {
+	[CmdletBinding(SupportsShouldProcess=$true)]
+	Param(
+		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$true)]
+            [String]$PoolName,
+        [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$true)]
+		    [String]$IPAddress
+	)
+	Begin {
+        #Put begining stuff here
+	}
+	Process {
+        #Put process here
+        if (Get-SCStaticIPAddressPool -Name $PoolName) {
+            $Pool = Get-SCStaticIPAddressPool -Name $PoolName
+            $ReservedSet = ($Pool).IPAddressReservedSet
+
+            #Find the IPAddress and add it along with extra characters
+            $ReservedSet = "$ReservedSet, $IPAddress"
+
+            #Update pool
+            $Pool | Set-SCStaticIPAddressPool -IPAddressReservedSet $ReservedSet
+        } else {
+            Write-Error -Message "$PoolName is not a valid Pool"
+        }
+	}
+	End {
+        #Put end here
+	}
+}
+
 Export-ModuleMember -Function "*"
