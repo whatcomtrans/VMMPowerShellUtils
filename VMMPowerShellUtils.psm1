@@ -189,4 +189,71 @@ function Add-SCStaticIPAddressFromPoolReservedSet {
 	}
 }
 
+<#
+ .SYNOPSIS
+Switch From Dynamic IP To Static IP Pool.
+
+.DESCRIPTION
+Switch From Dynamic IP To Static IP Pool in Virtual Machine Manager.
+
+.NOTES
+File Name : Set-SCVMIPAddressMode.ps1
+Author    : Charbel Nemnom
+Date      : 01-Mar-2016
+Version   : 1.0
+Requires  : PowerShell Version 3.0 or above, VMM IP Pools defined
+OS        : Windows Server 2012 R2 with System Center Virtual Machine Manager 2012 R2
+
+.LINK
+To provide feedback or for further assistance please visit:
+https://charbelnemnom.com
+
+.EXAMPLE
+./Set-SCVMIPAddressMode -VMMServer &lt;VMMServerName&gt; -VM &lt;VMName&gt;
+This example will switch &lt;VMName&gt; from Dynamic IP to Static IP Pool and assign a static IP Address 
+#>
+
+function Set-SCVMtoStaticIPPool {
+	[CmdletBinding(SupportsShouldProcess=$false,DefaultParameterSetName="example")]
+	Param(
+		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$false)]
+		[Alias('VM')]
+            [String]$VMName,
+        [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$true)]
+            [String]$VMNeworkName
+	)
+	Begin {
+        #Put begining stuff here
+	}
+	Process {
+        $VM = Get-SCVirtualMachine -Name $VMName
+
+        if (Get-SCVMNetwork -Name $VMNetworkName) {
+            # Select The VM Network  
+            $VMNetwork = Get-SCVMNetwork -Name $VMNetworkName
+
+            # Select the VM Subnet
+            $VMSubnet = Get-SCVMSubnet -VMNetwork $VMNetwork
+
+            # Select the IP Address Pool
+            $IPPool = Get-SCStaticIPAddressPool -VMSubnet $VMSubnet
+
+            # Select which Virtual NIC you want to apply Static IP Mode
+            $NIC = Get-SCVirtualNetworkAdapter -VM $VM.Name | Where {$_.VMNetwork.Name -eq $VMNetworkName}
+
+            # Get free IP address from the IP Pool
+            $IPAddress = Grant-SCIPAddress -GrantToObjectType VirtualNetworkAdapter -GrantToObjectID $VM.VirtualNetworkAdapters[($NIC.SlotID)].ID -StaticIPAddressPool $IPPool -Description $VM.Name
+
+            # Allocate to the vmNIC an IP Address from the IP Pool
+            Set-SCVirtualNetworkAdapter -VirtualNetworkAdapter $VM.VirtualNetworkAdapters[($NIC.SlotID)] -VMNetwork $VMNetwork -IPv4AddressType Static -IPv4Addresses $IPAddress.Address
+        } else {
+            Write-Error -Message "Invalid VM Network Name: $VMNeworkName"
+        }
+	}
+	End {
+        #Put end here
+	}
+}
+
+
 Export-ModuleMember -Function "*"
