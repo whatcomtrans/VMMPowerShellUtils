@@ -220,7 +220,7 @@ function Set-SCVMtoStaticIPPool {
 		[Alias('VM')]
             [String]$VMName,
         [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$false,ValueFromPipelineByPropertyName=$true)]
-            [String]$VMNeworkName
+            [String]$VMNetworkName
 	)
 	Begin {
         #Put begining stuff here
